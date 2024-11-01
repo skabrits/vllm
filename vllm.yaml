@@ -39,7 +39,7 @@ spec:
               - sh
               - -c
               - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model bartowski/Meta-Llama-3.1-70B-Instruct-GGUF-Q4_K_L --tensor-parallel-size 1 --pipeline_parallel_size 2"
+                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model unsloth/Meta-Llama-3.1-70B-Instruct-bnb-4bit --tensor-parallel-size 1 --pipeline_parallel_size 2"
             resources:
               limits:
                 nvidia.com/gpu: "1"
