@@ -16,7 +16,7 @@ kind: LeaderWorkerSet
 metadata:
   name: vllm
 spec:
-  replicas: 1
+  replicas: 0
   leaderWorkerTemplate:
     size: 2
     restartPolicy: RecreateGroupOnPodRestart
@@ -41,11 +41,16 @@ spec:
               - sh
               - -c
               - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model neuralmagic/Meta-Llama-3.1-8B-Instruct-FP8 --tensor-parallel-size 1 --pipeline_parallel_size 2"
+                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model meta-llama/Llama-3.1-8B-Instruct --tensor-parallel-size 1 --pipeline_parallel_size 2"
             resources:
               limits:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
+                cpu: 12
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: 10
             ports:
               - containerPort: 8080
             readinessProbe:
@@ -79,6 +84,11 @@ spec:
               limits:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
+                cpu: 12
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: 10
             env:
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
