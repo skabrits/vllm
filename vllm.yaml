@@ -38,7 +38,7 @@ spec:
             command:
               - sh
               - -c
-              - "/vllm-workspace/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
+              - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
                  python3 -m vllm.entrypoints.openai.api_server --port 8080 --model hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4 --tensor-parallel-size 1 --pipeline_parallel_size 2"
             resources:
               limits:
@@ -72,7 +72,7 @@ spec:
             command:
               - sh
               - -c
-              - "/vllm-workspace/ray_init.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
+              - "/workspace/vllm/examples/ray_init.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
             resources:
               limits:
                 nvidia.com/gpu: "1"
