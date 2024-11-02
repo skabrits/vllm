@@ -46,13 +46,14 @@ spec:
               limits:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
-                cpu: 12
+                cpu: '12'
               requests:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
-                cpu: 10
+                cpu: '10'
             ports:
               - containerPort: 8080
+                protocol: TCP
             readinessProbe:
               tcpSocket:
                 port: 8080
