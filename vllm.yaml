@@ -1,127 +1,127 @@
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: vllm-volume
-# spec:
-#   accessModes:
-#   - ReadWriteMany
-#   resources:
-#     requests:
-#       storage: 120Gi
-#   storageClassName: longhorn
-#   volumeMode: Filesystem
-# ---
-# apiVersion: leaderworkerset.x-k8s.io/v1
-# kind: LeaderWorkerSet
-# metadata:
-#   name: vllm
-# spec:
-#   replicas: 0
-#   leaderWorkerTemplate:
-#     size: 2
-#     restartPolicy: RecreateGroupOnPodRestart
-#     leaderTemplate:
-#       metadata:
-#         labels:
-#           role: leader
-#       spec:
-#         nodeSelector:
-#           nvidia.com/gpu.product: NVIDIA-GeForce-RTX-4070
-#         containers:
-#           - name: vllm-leader
-#             image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
-#             env:
-#               - name: HUGGING_FACE_HUB_TOKEN
-#                 valueFrom:
-#                   secretKeyRef:
-#                     name: hf-secret
-#                     key: hf_api_token
-#                     optional: true
-#             command:
-#               - sh
-#               - -c
-#               - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-#                  python3 -m vllm.entrypoints.openai.api_server --port 8080 --model meta-llama/Llama-3.1-8B-Instruct --tensor-parallel-size 1 --pipeline_parallel_size 2"
-#             resources:
-#               limits:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#               requests:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#             ports:
-#               - containerPort: 8080
-#                 protocol: TCP
-#             readinessProbe:
-#               tcpSocket:
-#                 port: 8080
-#               initialDelaySeconds: 15
-#               periodSeconds: 10
-#             volumeMounts:
-#               - mountPath: /root/.cache/huggingface
-#                 name: cache-volume
-#               - mountPath: /dev/shm
-#                 name: dshm
-#         volumes:
-#         - name: dshm
-#           emptyDir:
-#             medium: Memory
-#             sizeLimit: 15Gi
-#         - name: cache-volume
-#           persistentVolumeClaim:
-#             claimName: vllm-volume
-#     workerTemplate:
-#       spec:
-#         containers:
-#           - name: vllm-worker
-#             image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
-#             command:
-#               - sh
-#               - -c
-#               - "/workspace/vllm/examples/ray_init.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
-#             resources:
-#               limits:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#               requests:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#             env:
-#               - name: HUGGING_FACE_HUB_TOKEN
-#                 valueFrom:
-#                   secretKeyRef:
-#                     name: hf-secret
-#                     key: hf_api_token
-#                     optional: true
-#             volumeMounts:
-#               - mountPath: /root/.cache/huggingface
-#                 name: cache-volume
-#               - mountPath: /dev/shm
-#                 name: dshm   
-#         volumes:
-#         - name: dshm
-#           emptyDir:
-#             medium: Memory
-#             sizeLimit: 15Gi
-#         - name: cache-volume
-#           persistentVolumeClaim:
-#             claimName: vllm-volume
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: vllm-leader
-# spec:
-#   ports:
-#     - name: http
-#       port: 8080
-#       protocol: TCP
-#       targetPort: 8080
-#   selector:
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-volume
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 120Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: vllm
+spec:
+  replicas: 0
+  leaderWorkerTemplate:
+    size: 2
+    restartPolicy: RecreateGroupOnPodRestart
+    leaderTemplate:
+      metadata:
+        labels:
+          role: leader
+      spec:
+        nodeSelector:
+          nvidia.com/gpu.product: NVIDIA-GeForce-RTX-4070
+        containers:
+          - name: vllm-leader
+            image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
+            env:
+              - name: HUGGING_FACE_HUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+                    optional: true
+            command:
+              - sh
+              - -c
+              - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
+                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model meta-llama/Llama-3.1-8B-Instruct --tensor-parallel-size 1 --pipeline_parallel_size 2"
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            readinessProbe:
+              tcpSocket:
+                port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+            volumeMounts:
+              - mountPath: /root/.cache/huggingface
+                name: cache-volume
+              - mountPath: /dev/shm
+                name: dshm
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 15Gi
+        - name: cache-volume
+          persistentVolumeClaim:
+            claimName: vllm-volume
+    workerTemplate:
+      spec:
+        containers:
+          - name: vllm-worker
+            image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
+            command:
+              - sh
+              - -c
+              - "/workspace/vllm/examples/ray_init.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+            env:
+              - name: HUGGING_FACE_HUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+                    optional: true
+            volumeMounts:
+              - mountPath: /root/.cache/huggingface
+                name: cache-volume
+              - mountPath: /dev/shm
+                name: dshm   
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 15Gi
+        - name: cache-volume
+          persistentVolumeClaim:
+            claimName: vllm-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-leader
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
 #     leaderworkerset.sigs.k8s.io/name: vllm
 #     role: leader
 #   type: ClusterIP
