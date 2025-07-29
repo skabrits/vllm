@@ -42,7 +42,7 @@ spec:
               - -c
               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
                 python3 -m pip install bitsandbytes;
-                wget https://huggingface.co/Mungert/Qwen2.5-VL-32B-Instruct-GGUF/blob/main/Qwen2.5-VL-32B-Instruct-q3_k_s.gguf
+                wget https://huggingface.co/Mungert/Qwen2.5-VL-32B-Instruct-GGUF/blob/main/Qwen2.5-VL-32B-Instruct-q3_k_s.gguf;
                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model './Qwen2.5-VL-32B-Instruct-q3_k_s.gguf' --tensor-parallel-size 1 --pipeline_parallel_size 2;"
             resources:
               limits:
