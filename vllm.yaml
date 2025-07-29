@@ -42,7 +42,7 @@ spec:
               - -c
               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=1; 
                 python3 -m pip install bitsandbytes;
-                pip install flash-attn;
+                pip install flash-attn<=2.8.0;
                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct-AWQ --gpu_memory_utilization=0.95 --tensor-parallel-size 1 --pipeline_parallel_size 1 --trust-remote-code --enable-chunked-prefill --max_model_len 4096 --quantization awq_marlin --max-num-batched-tokens 4097 --kv-cache-dtype fp8_e4m3;"
                 # $(LWS_GROUP_SIZE)
             resources:
