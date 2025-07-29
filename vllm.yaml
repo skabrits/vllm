@@ -42,7 +42,7 @@ spec:
               - -c
               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=1; 
                 python3 -m pip install bitsandbytes;
-                python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct --dtype float16 --quantization bitsandbytes --tensor-parallel-size 1 --pipeline_parallel_size 1;"
+                python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct-AWQ --quantization awq --tensor-parallel-size 1 --pipeline_parallel_size 1;"
                 # $(LWS_GROUP_SIZE)
             resources:
               limits:
