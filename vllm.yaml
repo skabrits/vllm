@@ -1,16 +1,16 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: vllm-volume
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 120Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
----
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: vllm-volume
+# spec:
+#   accessModes:
+#   - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 120Gi
+#   storageClassName: longhorn
+#   volumeMode: Filesystem
+# ---
 apiVersion: leaderworkerset.x-k8s.io/v1
 kind: LeaderWorkerSet
 metadata:
@@ -29,7 +29,7 @@ spec:
           nvidia.com/gpu.product: NVIDIA-GeForce-RTX-4070
         containers:
           - name: vllm-leader
-            image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
+            image: docker.io/vllm/vllm-openai:latest
             env:
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
@@ -40,17 +40,20 @@ spec:
             command:
               - sh
               - -c
-              - "/workspace/vllm/examples/ray_init.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-                 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model meta-llama/Llama-3.1-8B-Instruct --tensor-parallel-size 1 --pipeline_parallel_size 2"
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
+                python3 -m pip install bitsandbytes
+                python3 -m vllm.entrypoints.openai.api_server --port 8080 --model "Mungert/Qwen2.5-VL-32B-Instruct-GGUF" --tensor-parallel-size 1 --pipeline_parallel_size 2" # Qwen2.5-VL-32B-Instruct-q3_k_s.gguf
             resources:
               limits:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
                 cpu: "10"
+                ephemeral-storage: 150Gi
               requests:
                 nvidia.com/gpu: "1"
-                memory: 32Gi
-                cpu: "10"
+                memory: 8Gi
+                cpu: "2"
+                ephemeral-storage: 80Gi
             ports:
               - containerPort: 8080
                 protocol: TCP
@@ -60,36 +63,38 @@ spec:
               initialDelaySeconds: 15
               periodSeconds: 10
             volumeMounts:
-              - mountPath: /root/.cache/huggingface
-                name: cache-volume
+              # - mountPath: /root/.cache/huggingface
+              #   name: cache-volume
               - mountPath: /dev/shm
                 name: dshm
         volumes:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 15Gi
-        - name: cache-volume
-          persistentVolumeClaim:
-            claimName: vllm-volume
+            sizeLimit: 8Gi
+        # - name: cache-volume
+        #   persistentVolumeClaim:
+        #     claimName: vllm-volume
     workerTemplate:
       spec:
         containers:
           - name: vllm-worker
-            image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240821_1034_RC00
+            image: docker.io/vllm/vllm-openai:latest
             command:
               - sh
               - -c
-              - "/workspace/vllm/examples/ray_init.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE);"
             resources:
               limits:
                 nvidia.com/gpu: "1"
                 memory: 32Gi
                 cpu: "10"
+                ephemeral-storage: 150Gi
               requests:
                 nvidia.com/gpu: "1"
-                memory: 32Gi
-                cpu: "10"
+                memory: 8Gi
+                cpu: "2"
+                ephemeral-storage: 80Gi
             env:
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
@@ -98,18 +103,18 @@ spec:
                     key: hf_api_token
                     optional: true
             volumeMounts:
-              - mountPath: /root/.cache/huggingface
-                name: cache-volume
+              # - mountPath: /root/.cache/huggingface
+              #   name: cache-volume
               - mountPath: /dev/shm
                 name: dshm   
         volumes:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 15Gi
-        - name: cache-volume
-          persistentVolumeClaim:
-            claimName: vllm-volume
+            sizeLimit: 8Gi
+        # - name: cache-volume
+        #   persistentVolumeClaim:
+        #     claimName: vllm-volume
 ---
 apiVersion: v1
 kind: Service
