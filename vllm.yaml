@@ -71,7 +71,7 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 8Gi
+            sizeLimit: 12Gi
         # - name: cache-volume
         #   persistentVolumeClaim:
         #     claimName: vllm-volume
@@ -111,7 +111,7 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 8Gi
+            sizeLimit: 12Gi
         # - name: cache-volume
         #   persistentVolumeClaim:
         #     claimName: vllm-volume
