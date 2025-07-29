@@ -1,134 +1,134 @@
-# # apiVersion: v1
-# # kind: PersistentVolumeClaim
-# # metadata:
-# #   name: vllm-volume
-# # spec:
-# #   accessModes:
-# #   - ReadWriteMany
-# #   resources:
-# #     requests:
-# #       storage: 120Gi
-# #   storageClassName: longhorn
-# #   volumeMode: Filesystem
-# # ---
-# apiVersion: leaderworkerset.x-k8s.io/v1
-# kind: LeaderWorkerSet
-# metadata:
-#   name: vllm
-# spec:
-#   replicas: 1
-#   leaderWorkerTemplate:
-#     size: 2
-#     restartPolicy: RecreateGroupOnPodRestart
-#     leaderTemplate:
-#       metadata:
-#         labels:
-#           role: leader
-#       spec:
-#         nodeSelector:
-#           nvidia.com/gpu.product: NVIDIA-GeForce-RTX-4070
-#         containers:
-#           - name: vllm-leader
-#             image: docker.io/vllm/vllm-openai:latest
-#             env:
-#               - name: HUGGING_FACE_HUB_TOKEN
-#                 valueFrom:
-#                   secretKeyRef:
-#                     name: hf-secret
-#                     key: hf_api_token
-#                     optional: true
-#             command:
-#               - sh
-#               - -c
-#               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-#                 python3 -m pip install bitsandbytes;
-#                 VLLM_PP_LAYER_PARTITION=27,1 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct --gpu_memory_utilization=0.95 --dtype float16 --tensor-parallel-size 1 --pipeline_parallel_size 2 --trust-remote-code --quantization bitsandbytes;"
-#                 # 
-#                 # pip install 'flash-attn>=2.7.3,<2.8.1';
-#             resources:
-#               limits:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#                 ephemeral-storage: 150Gi
-#               requests:
-#                 nvidia.com/gpu: "1"
-#                 memory: 8Gi
-#                 cpu: "2"
-#                 ephemeral-storage: 80Gi
-#             ports:
-#               - containerPort: 8080
-#                 protocol: TCP
-#             readinessProbe:
-#               tcpSocket:
-#                 port: 8080
-#               initialDelaySeconds: 15
-#               periodSeconds: 10
-#             volumeMounts:
-#               # - mountPath: /root/.cache/huggingface
-#               #   name: cache-volume
-#               - mountPath: /dev/shm
-#                 name: dshm
-#         volumes:
-#         - name: dshm
-#           emptyDir:
-#             medium: Memory
-#             sizeLimit: 12Gi
-#         # - name: cache-volume
-#         #   persistentVolumeClaim:
-#         #     claimName: vllm-volume
-#     workerTemplate:
-#       spec:
-#         containers:
-#           - name: vllm-worker
-#             image: docker.io/vllm/vllm-openai:latest
-#             command:
-#               - sh
-#               - -c
-#               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh worker --ray_address=$(LWS_LEADER_ADDRESS); python3 -m pip install bitsandbytes;"
-#             resources:
-#               limits:
-#                 nvidia.com/gpu: "1"
-#                 memory: 32Gi
-#                 cpu: "10"
-#                 ephemeral-storage: 150Gi
-#               requests:
-#                 nvidia.com/gpu: "1"
-#                 memory: 8Gi
-#                 cpu: "2"
-#                 ephemeral-storage: 80Gi
-#             env:
-#               - name: HUGGING_FACE_HUB_TOKEN
-#                 valueFrom:
-#                   secretKeyRef:
-#                     name: hf-secret
-#                     key: hf_api_token
-#                     optional: true
-#             volumeMounts:
-#               # - mountPath: /root/.cache/huggingface
-#               #   name: cache-volume
-#               - mountPath: /dev/shm
-#                 name: dshm   
-#         volumes:
-#         - name: dshm
-#           emptyDir:
-#             medium: Memory
-#             sizeLimit: 12Gi
-#         # - name: cache-volume
-#         #   persistentVolumeClaim:
-#         #     claimName: vllm-volume
-# ---
 # apiVersion: v1
-# kind: Service
+# kind: PersistentVolumeClaim
 # metadata:
-#   name: vllm-leader
-#   annotations:
-#     metallb.universe.tf/loadBalancerIPs: 192.168.0.154
+#   name: vllm-volume
 # spec:
-#   ports:
-#     - name: http
-#       port: 8080
-#       protocol: TCP
+#   accessModes:
+#   - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 120Gi
+#   storageClassName: longhorn
+#   volumeMode: Filesystem
+# ---
+apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: vllm
+spec:
+  replicas: 1
+  leaderWorkerTemplate:
+    size: 2
+    restartPolicy: RecreateGroupOnPodRestart
+    leaderTemplate:
+      metadata:
+        labels:
+          role: leader
+      spec:
+        nodeSelector:
+          nvidia.com/gpu.product: NVIDIA-GeForce-RTX-4070
+        containers:
+          - name: vllm-leader
+            image: docker.io/vllm/vllm-openai:latest
+            env:
+              - name: HUGGING_FACE_HUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+                    optional: true
+            command:
+              - sh
+              - -c
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
+                python3 -m pip install bitsandbytes;
+                VLLM_PP_LAYER_PARTITION=27,1 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct --gpu_memory_utilization=0.95 --dtype float16 --tensor-parallel-size 1 --pipeline_parallel_size 2 --trust-remote-code --quantization bitsandbytes;"
+                # 
+                # pip install 'flash-attn>=2.7.3,<2.8.1';
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+                ephemeral-storage: 150Gi
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 8Gi
+                cpu: "2"
+                ephemeral-storage: 80Gi
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            readinessProbe:
+              tcpSocket:
+                port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+            volumeMounts:
+              # - mountPath: /root/.cache/huggingface
+              #   name: cache-volume
+              - mountPath: /dev/shm
+                name: dshm
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 12Gi
+        # - name: cache-volume
+        #   persistentVolumeClaim:
+        #     claimName: vllm-volume
+    workerTemplate:
+      spec:
+        containers:
+          - name: vllm-worker
+            image: docker.io/vllm/vllm-openai:latest
+            command:
+              - sh
+              - -c
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh worker --ray_address=$(LWS_LEADER_ADDRESS); python3 -m pip install bitsandbytes;"
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                memory: 32Gi
+                cpu: "10"
+                ephemeral-storage: 150Gi
+              requests:
+                nvidia.com/gpu: "1"
+                memory: 8Gi
+                cpu: "2"
+                ephemeral-storage: 80Gi
+            env:
+              - name: HUGGING_FACE_HUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+                    optional: true
+            volumeMounts:
+              # - mountPath: /root/.cache/huggingface
+              #   name: cache-volume
+              - mountPath: /dev/shm
+                name: dshm   
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 12Gi
+        # - name: cache-volume
+        #   persistentVolumeClaim:
+        #     claimName: vllm-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-leader
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.0.154
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
 #       targetPort: 8080
 #   selector:
 #     leaderworkerset.sigs.k8s.io/name: vllm
