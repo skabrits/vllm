@@ -41,8 +41,9 @@ spec:
               - sh
               - -c
               - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE); 
-                VLLM_PP_LAYER_PARTITION=27,1 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct-AWQ --gpu_memory_utilization=0.95 --dtype float16 --tensor-parallel-size 1 --pipeline_parallel_size 2 --trust-remote-code --quantization awq_marlin;"
-                # python3 -m pip install bitsandbytes;
+                python3 -m pip install bitsandbytes;
+                VLLM_PP_LAYER_PARTITION=27,1 python3 -m vllm.entrypoints.openai.api_server --port 8080 --model Qwen/Qwen2.5-VL-7B-Instruct --gpu_memory_utilization=0.95 --dtype float16 --tensor-parallel-size 1 --pipeline_parallel_size 2 --trust-remote-code --quantization bitsandbytes;"
+                # 
                 # pip install 'flash-attn>=2.7.3,<2.8.1';
             resources:
               limits:
@@ -84,7 +85,7 @@ spec:
             command:
               - sh
               - -c
-              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh worker --ray_address=$(LWS_LEADER_ADDRESS); python3 -m pip install bitsandbytes;"
             resources:
               limits:
                 nvidia.com/gpu: "1"
