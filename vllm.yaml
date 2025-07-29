@@ -83,7 +83,7 @@ spec:
             command:
               - sh
               - -c
-              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh leader --ray_cluster_size=$(LWS_GROUP_SIZE);"
+              - "bash /vllm-workspace/examples/online_serving/multi-node-serving.sh worker --ray_address=$(LWS_LEADER_ADDRESS)"
             resources:
               limits:
                 nvidia.com/gpu: "1"
